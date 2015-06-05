@@ -136,7 +136,7 @@ public class KoreanDictionary extends Application {
     public void search(){
         String text = input.getText();
         if(text.length() == 0){
-            list.setItems(FXCollections.observableArrayList("찾을 단어를 입력해 주세요!"));
+            list.setItems(FXCollections.observableArrayList("검색어를 입력해 주세요!"));
             return;
         }
 
@@ -155,7 +155,7 @@ public class KoreanDictionary extends Application {
                 result.addAll(KoreanFinder.getAllNoun(startsWith.isSelected() ? KoreanFinder.SearchType.STARTS_WITH : KoreanFinder.SearchType.ENDS_WITH, text, banned));
 
                 if(result.size() == 0){
-                    result.add("해당 단어로 시작하는 단어가 없습니다!");
+                    result.add("해당 문자로 " + (startsWith.isSelected() ? "시작하는" : "끝나는") + " 단어가 없습니다!");
                 }
             }catch(IOException e){
                 e.printStackTrace();
