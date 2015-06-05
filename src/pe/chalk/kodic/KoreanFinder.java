@@ -21,6 +21,7 @@ package pe.chalk.kodic;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -31,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -107,9 +109,16 @@ public class KoreanFinder {
         return builder.toString();
     }
 
-    public static Collection<String> getAllNounStartsWith(String firstLetter) throws IOException {
+    public static Collection<String> getAllNounStartsWith(String firstLetter, String... banned) throws IOException {
         Document document = Jsoup.parse(KoreanFinder.getHTML(KoreanFinder.getParameters(SearchType.STARTS_WITH, firstLetter, SpCode.MYEONGSA)));
 
-        return document.select("a[title] strong font").stream().map(Element::text).filter(str -> str.length() > 1).distinct().map(str -> str.replaceAll("-", "")).collect(Collectors.toList());
+        return new Elements(document.select("span#print_area p.exp").stream().filter(element -> {
+            for(Element elem : element.select("> font[face=\"새굴림\"]")){
+                if(Arrays.asList(banned).contains(elem.text())){
+                    return false;
+                }
+            }
+            return true;
+        }).collect(Collectors.toList())).select("a[title] strong font").stream().map(Element::text).filter(str -> str.length() > 1).distinct().map(str -> str.replaceAll("-", "")).collect(Collectors.toList());
     }
 }

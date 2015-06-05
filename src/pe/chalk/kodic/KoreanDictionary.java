@@ -128,7 +128,7 @@ public class KoreanDictionary extends Application {
         new Thread(() -> {
             ObservableList<String> result = FXCollections.observableArrayList();
             try{
-                result.addAll(KoreanFinder.getAllNounStartsWith(text));
+                result.addAll(KoreanFinder.getAllNounStartsWith(text, "방언", "북한어", "옛말"));
 
                 if(result.size() == 0){
                     result.add("[정보] 해당 단어로 시작하는 단어가 없습니다!");
