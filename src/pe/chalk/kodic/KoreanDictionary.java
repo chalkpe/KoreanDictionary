@@ -19,7 +19,9 @@
 package pe.chalk.kodic;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -27,17 +29,18 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.Collection;
 
 /**
  * @author ChalkPE <amato0617@gmail.com>
@@ -45,7 +48,10 @@ import java.util.Collection;
  */
 public class KoreanDictionary extends Application {
     private TextField input;
+
+    private StackPane contents;
     private ListView<String> list;
+    private ProgressIndicator progress;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -82,20 +88,20 @@ public class KoreanDictionary extends Application {
             }
         });
         list.setItems(FXCollections.observableArrayList("A simple dictionary for Korean", "Powered by National Institute of the Korean Language", "", "Copyright (c) 2015 ChalkPE", "Licensed under GNU General Public License v3.0", "", "https://github.com/ChalkPE/KoreanDictionary"));
-        VBox.setVgrow(list, Priority.ALWAYS);
+
+        progress = new ProgressIndicator();
+        StackPane.setMargin(progress, new Insets(50));
 
         //Init layouts
 
-        HBox searchBox = new HBox(6);
-        searchBox.getChildren().addAll(input, searchButton);
-
-        VBox top = new VBox();
+        VBox top = new VBox(new HBox(6, input, searchButton));
         top.setPadding(new Insets(6));
-        top.getChildren().add(searchBox);
+
+        contents = new StackPane(list);
 
         BorderPane root = new BorderPane();
         root.setTop(top);
-        root.setCenter(list);
+        root.setCenter(contents);
 
         Scene scene = new Scene(new Group());
         scene.setRoot(root);
@@ -111,18 +117,32 @@ public class KoreanDictionary extends Application {
             return;
         }
 
-        try{
-            Collection<String> result = FXCollections.observableArrayList(KoreanFinder.getAllNounStartsWith(text));
-            if(result.size() == 0){
-                result.add("[오류] 해당 단어로 시작하는 단어가 없습니다!");
-            }
-
-            list.setItems(FXCollections.observableArrayList(result));
-        }catch(IOException e){
-            e.printStackTrace();
-
-            list.setItems(FXCollections.observableArrayList("[오류] 네트워크 오류가 발생했습니다! 인터넷 연결을 확인해 주세요!"));
+        if(contents.getChildren().contains(progress)){
+            list.setItems(FXCollections.observableArrayList("[오류] 이미 찾고 있는 중입니다!"));
+            return;
         }
+
+        contents.getChildren().add(progress);
+
+        list.setItems(FXCollections.observableArrayList("[정보] 단어를 찾는 중입니다..."));
+        new Thread(() -> {
+            ObservableList<String> result = FXCollections.observableArrayList();
+            try{
+                result.addAll(KoreanFinder.getAllNounStartsWith(text));
+
+                if(result.size() == 0){
+                    result.add("[정보] 해당 단어로 시작하는 단어가 없습니다!");
+                }
+            }catch(IOException e){
+                e.printStackTrace();
+                result.add("[오류] 네트워크 오류가 발생했습니다! 인터넷 연결을 확인해 주세요!");
+            }finally{
+                Platform.runLater(() -> {
+                    contents.getChildren().remove(progress);
+                    list.setItems(result);
+                });
+            }
+        }).start();
     }
 
     public static void main(String[] args){
