@@ -34,6 +34,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,9 +44,12 @@ import java.util.stream.Stream;
  * @since 2015-06-02
  */
 public class KoreanFinder {
-    private static final String URL = "http://stdweb2.korean.go.kr/search/List_dic.jsp";
-    private static final String CHARSET = "UTF-8";
+    public static final String URL = "http://stdweb2.korean.go.kr/search/List_dic.jsp";
+    public static final String CHARSET = "UTF-8";
 
+    private static final Map<String, String> cache = new HashMap<>();
+
+    @SuppressWarnings("unused")
     enum SearchType {
         EQUALS("0"), STARTS_WITH("1"), ENDS_WITH("2"), CONTAINS("3");
 
@@ -60,6 +65,7 @@ public class KoreanFinder {
         }
     }
 
+    @SuppressWarnings("unused")
     enum SpCode {
         MYEONGSA("1");
 
@@ -89,6 +95,10 @@ public class KoreanFinder {
     }
 
     private static String getHTML(String parameters) throws IOException {
+        if(cache.containsKey(parameters)){
+            return cache.get(parameters);
+        }
+
         HttpURLConnection connection = (HttpURLConnection) new URL(URL).openConnection();
         connection.setDoOutput(true);
         connection.setRequestMethod("GET");
@@ -106,7 +116,10 @@ public class KoreanFinder {
             }
         }
 
-        return builder.toString();
+        String html = builder.toString();
+        cache.put(parameters, html);
+
+        return html;
     }
 
     public static Collection<String> getAllNoun(SearchType type, String firstLetter, String... banned) throws IOException {

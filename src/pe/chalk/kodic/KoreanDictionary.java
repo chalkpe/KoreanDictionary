@@ -163,7 +163,9 @@ public class KoreanDictionary extends Application {
             }finally{
                 Platform.runLater(() -> {
                     contents.getChildren().remove(progress);
+
                     list.setItems(result);
+                    list.getSelectionModel().clearSelection();
                 });
             }
         }).start();
