@@ -109,8 +109,8 @@ public class KoreanFinder {
         return builder.toString();
     }
 
-    public static Collection<String> getAllNounStartsWith(String firstLetter, String... banned) throws IOException {
-        Document document = Jsoup.parse(KoreanFinder.getHTML(KoreanFinder.getParameters(SearchType.STARTS_WITH, firstLetter, SpCode.MYEONGSA)));
+    public static Collection<String> getAllNoun(SearchType type, String firstLetter, String... banned) throws IOException {
+        Document document = Jsoup.parse(KoreanFinder.getHTML(KoreanFinder.getParameters(type, firstLetter, SpCode.MYEONGSA)));
 
         return new Elements(document.select("span#print_area p.exp").stream().filter(element -> {
             for(Element elem : element.select("> font[face=\"새굴림\"]")){

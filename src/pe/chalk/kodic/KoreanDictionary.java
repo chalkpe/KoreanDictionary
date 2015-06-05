@@ -28,9 +28,12 @@ import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.BorderPane;
@@ -53,6 +56,9 @@ public class KoreanDictionary extends Application {
     private ListView<String> list;
     private ProgressIndicator progress;
 
+    private CheckBox filterNonUniversalWords;
+    private RadioButton startsWith;
+
     @Override
     public void start(Stage stage) throws Exception {
         //Init window
@@ -60,8 +66,8 @@ public class KoreanDictionary extends Application {
         stage.setMinWidth(250);
         stage.setMinHeight(500);
 
-        stage.setWidth(450);
-        stage.setHeight(700);
+        stage.setWidth(400);
+        stage.setHeight(600);
 
         stage.setTitle("KoreanDictionary");
         stage.setOnCloseRequest(value -> System.exit(0));
@@ -78,6 +84,19 @@ public class KoreanDictionary extends Application {
         Button searchButton = new Button("검색");
         searchButton.setOnAction(searchHandler);
 
+        filterNonUniversalWords = new CheckBox("방언, 북한어, 옛말 제외");
+        filterNonUniversalWords.setSelected(true);
+
+        ToggleGroup group = new ToggleGroup();
+
+        startsWith = new RadioButton("시작 문자");
+        RadioButton endsWith = new RadioButton("끝 문자");
+
+        startsWith.setToggleGroup(group);
+        endsWith.setToggleGroup(group);
+
+        startsWith.setSelected(true);
+
         list = new ListView<>();
         list.setOnMouseClicked(click -> {
             if(click.getClickCount() == 2){
@@ -87,14 +106,18 @@ public class KoreanDictionary extends Application {
                 Clipboard.getSystemClipboard().setContent(content);
             }
         });
-        list.setItems(FXCollections.observableArrayList("A simple dictionary for Korean", "Powered by National Institute of the Korean Language", "", "Copyright (c) 2015 ChalkPE", "Licensed under GNU General Public License v3.0", "", "https://github.com/ChalkPE/KoreanDictionary"));
+        list.setItems(FXCollections.observableArrayList("간단한 한국어 사전", "- 국립국어원 표준국어대사전을 사용했습니다", "", "Copyright (c) 2015 ChalkPE", "Licensed under GNU General Public License v3.0", "", "https://github.com/ChalkPE/KoreanDictionary"));
 
         progress = new ProgressIndicator();
         StackPane.setMargin(progress, new Insets(50));
 
         //Init layouts
 
-        VBox top = new VBox(new HBox(6, input, searchButton));
+        BorderPane optionPane = new BorderPane();
+        optionPane.setLeft(filterNonUniversalWords);
+        optionPane.setRight(new HBox(6, startsWith, endsWith));
+
+        VBox top = new VBox(6, new HBox(6, input, searchButton), optionPane);
         top.setPadding(new Insets(6));
 
         contents = new StackPane(list);
@@ -113,29 +136,30 @@ public class KoreanDictionary extends Application {
     public void search(){
         String text = input.getText();
         if(text.length() == 0){
-            list.setItems(FXCollections.observableArrayList("[오류] 찾을 단어를 입력해 주세요!"));
+            list.setItems(FXCollections.observableArrayList("찾을 단어를 입력해 주세요!"));
             return;
         }
 
         if(contents.getChildren().contains(progress)){
-            list.setItems(FXCollections.observableArrayList("[오류] 이미 찾고 있는 중입니다!"));
+            list.setItems(FXCollections.observableArrayList("이미 찾고 있는 중입니다!"));
             return;
         }
 
         contents.getChildren().add(progress);
 
-        list.setItems(FXCollections.observableArrayList("[정보] 단어를 찾는 중입니다..."));
+        list.setItems(FXCollections.observableArrayList("단어를 찾는 중입니다..."));
         new Thread(() -> {
             ObservableList<String> result = FXCollections.observableArrayList();
             try{
-                result.addAll(KoreanFinder.getAllNounStartsWith(text, "방언", "북한어", "옛말"));
+                String[] banned = filterNonUniversalWords.isSelected() ? new String[]{"방언", "북한어", "옛말"} : new String[]{};
+                result.addAll(KoreanFinder.getAllNoun(startsWith.isSelected() ? KoreanFinder.SearchType.STARTS_WITH : KoreanFinder.SearchType.ENDS_WITH, text, banned));
 
                 if(result.size() == 0){
-                    result.add("[정보] 해당 단어로 시작하는 단어가 없습니다!");
+                    result.add("해당 단어로 시작하는 단어가 없습니다!");
                 }
             }catch(IOException e){
                 e.printStackTrace();
-                result.add("[오류] 네트워크 오류가 발생했습니다! 인터넷 연결을 확인해 주세요!");
+                result.add("네트워크 오류가 발생했습니다! 인터넷 연결을 확인해 주세요!");
             }finally{
                 Platform.runLater(() -> {
                     contents.getChildren().remove(progress);
