@@ -156,6 +156,8 @@ public class KoreanDictionary extends Application {
 
                 if(result.size() == 0){
                     result.add("해당 문자로 " + (startsWith.isSelected() ? "시작하는" : "끝나는") + " 단어가 없습니다!");
+                }else{
+                    result.add(0, "총 " + result.size() + "개의 단어를 발견했습니다!");
                 }
             }catch(IOException e){
                 e.printStackTrace();
