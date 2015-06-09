@@ -161,7 +161,7 @@ public class KoreanDictionary extends Application {
                 }
             }catch(IOException e){
                 e.printStackTrace();
-                result.add("네트워크 오류가 발생했습니다! 인터넷 연결을 확인해 주세요!");
+                result.add("오류가 발생했습니다 :(");
             }finally{
                 Platform.runLater(() -> {
                     contents.getChildren().remove(progress);
