@@ -100,10 +100,7 @@ public class KoreanDictionary extends Application {
         list = new ListView<>();
         list.setOnMouseClicked(click -> {
             if(click.getClickCount() == 2){
-                ClipboardContent content = new ClipboardContent();
-                content.putString(list.getSelectionModel().getSelectedItem());
-
-                Clipboard.getSystemClipboard().setContent(content);
+                KoreanDictionary.copyToClipboard(list.getSelectionModel().getSelectedItem());
             }
         });
         list.setItems(FXCollections.observableArrayList("간단한 한국어 사전", "- 국립국어원 표준국어대사전을 사용했습니다", "", "Copyright (c) 2015 ChalkPE", "Licensed under GNU General Public License v3.0", "", "https://github.com/ChalkPE/KoreanDictionary"));
@@ -168,9 +165,20 @@ public class KoreanDictionary extends Application {
 
                     list.setItems(result);
                     list.getSelectionModel().clearSelection();
+
+                    if(!result.isEmpty()){
+                        KoreanDictionary.copyToClipboard(String.join(", ", result.subList(1, result.size() - 1)));
+                    }
                 });
             }
         }).start();
+    }
+
+    public static void copyToClipboard(String string){
+        ClipboardContent content = new ClipboardContent();
+        content.putString(string);
+
+        Clipboard.getSystemClipboard().setContent(content);
     }
 
     public static void main(String[] args){
