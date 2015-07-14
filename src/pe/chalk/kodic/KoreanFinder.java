@@ -19,7 +19,6 @@
 package pe.chalk.kodic;
 
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -123,15 +122,17 @@ public class KoreanFinder {
     }
 
     public static Collection<String> getAllNoun(SearchType type, String firstLetter, String... banned) throws IOException {
-        Document document = Jsoup.parse(KoreanFinder.getHTML(KoreanFinder.getParameters(type, firstLetter, SpCode.MYEONGSA)));
-
-        return new Elements(document.select("span#print_area p.exp").stream().filter(element -> {
-            for(Element elem : element.select("> font[face=\"새굴림\"]")){
-                if(Arrays.asList(banned).contains(elem.text())){
-                    return false;
-                }
-            }
-            return true;
-        }).collect(Collectors.toList())).select("a[title] strong font").stream().map(Element::text).filter(str -> str.length() > 1).distinct().map(str -> str.replaceAll("-", "")).collect(Collectors.toList());
+        return new Elements(Jsoup.parse(KoreanFinder.getHTML(KoreanFinder.getParameters(type, firstLetter, SpCode.MYEONGSA)))
+                .select("span#print_area p.exp").stream()
+                .filter(element -> !element.select("> font[face=\"새굴림\"]").stream()
+                        .map(Element::text)
+                        .anyMatch(text -> Arrays.asList(banned).contains(text)))
+                .collect(Collectors.toList()))
+                .select("a[title] strong font").stream()
+                .map(Element::text).filter(str -> str.length() > 1).distinct()
+                .map(str -> str.codePoints()
+                        .filter(codePoint -> Character.UnicodeScript.of(codePoint) == Character.UnicodeScript.HANGUL)
+                        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString())
+                .collect(Collectors.toList());
     }
 }

@@ -166,7 +166,7 @@ public class KoreanDictionary extends Application {
                     list.setItems(result);
                     list.getSelectionModel().clearSelection();
 
-                    if(!result.isEmpty()){
+                    if(result.size() > 1){
                         KoreanDictionary.copyToClipboard(String.join(", ", result.subList(1, result.size() - 1)));
                     }
                 });
